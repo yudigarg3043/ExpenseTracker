@@ -3,15 +3,16 @@ import dbConnect from '@/lib/mongodb';
 import Transaction from '@/models/Transaction';
 import { getUserFromToken } from '@/lib/auth';
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await getUserFromToken();
     if (!user) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
 
+    const { id } = await params;
     await dbConnect();
     
     // Ensure the transaction belongs to the user
-    const deleted = await Transaction.findOneAndDelete({ _id: params.id, user: user.id });
+    const deleted = await Transaction.findOneAndDelete({ _id: id, user: user.id });
     
     if (!deleted) {
       return NextResponse.json({ message: 'Transaction not found or unauthorized' }, { status: 404 });
